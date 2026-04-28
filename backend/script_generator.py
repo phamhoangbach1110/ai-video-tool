@@ -1,6 +1,7 @@
 """
-Sinh kịch bản video bằng Gemini 1.5 Flash (free tier, không cần trả phí).
-Đăng ký tại: https://aistudio.google.com/app/apikey
+Sinh kịch bản video bằng Groq API (free tier, cực nhanh).
+Đăng ký tại: https://console.groq.com
+Model: llama-3.3-70b-versatile (free)
 """
 
 import requests
@@ -8,32 +9,22 @@ import json
 import os
 import re
 
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 
 def generate_script(topic: str, style: str = 'funny', duration: int = 30) -> dict:
-    """
-    Sinh kịch bản video ngắn tiếng Việt.
-    
-    Returns dict gồm:
-    - title: tiêu đề video
-    - narration: lời thoại đầy đủ
-    - scenes: list các cảnh (mô tả hình ảnh)
-    - hashtags: list hashtag
-    - description: mô tả video
-    """
-    if not GEMINI_API_KEY or GEMINI_API_KEY == '':
-        print("[Script] Không có API key, dùng script mẫu")
+    if not GROQ_API_KEY:
+        print("[Script] Không có Groq API key, dùng script mẫu")
         return _fallback_script(topic, style)
 
     num_scenes = max(3, duration // 10)
 
     style_guide = {
-        'funny': 'hài hước, vui vẻ, có tình huống bất ngờ gây cười',
+        'funny':       'hài hước, vui vẻ, có tình huống bất ngờ gây cười',
         'informative': 'thông tin, giáo dục, giải thích dễ hiểu',
-        'dramatic': 'kịch tính, cảm xúc, có cao trào',
-        'story': 'kể chuyện có nhân vật, có mở đầu, diễn biến và kết thúc',
+        'dramatic':    'kịch tính, cảm xúc, có cao trào',
+        'story':       'kể chuyện có nhân vật, có mở đầu, diễn biến và kết thúc',
     }
     style_desc = style_guide.get(style, style_guide['funny'])
 
@@ -41,7 +32,7 @@ def generate_script(topic: str, style: str = 'funny', duration: int = 30) -> dic
 Phong cách: {style_desc}
 Số cảnh: {num_scenes} cảnh
 
-Trả về JSON với cấu trúc sau (chỉ JSON, không giải thích thêm):
+Trả về JSON với cấu trúc sau (chỉ JSON thuần, không markdown, không giải thích):
 {{
   "title": "Tiêu đề video hấp dẫn (dưới 60 ký tự)",
   "narration": "Toàn bộ lời thoại/lời kể liền mạch bằng tiếng Việt ({duration} giây đọc)",
@@ -59,35 +50,49 @@ Trả về JSON với cấu trúc sau (chỉ JSON, không giải thích thêm):
 
     try:
         resp = requests.post(
-            f"{GEMINI_URL}?key={GEMINI_API_KEY}",
+            GROQ_URL,
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
+            },
             json={
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"temperature": 0.8, "maxOutputTokens": 1500}
+                "model": "llama-3.3-70b-versatile",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "Bạn là chuyên gia tạo nội dung video viral cho thị trường Việt Nam. Chỉ trả về JSON thuần, không có markdown hay giải thích thêm."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                "temperature": 0.8,
+                "max_tokens": 1500,
             },
             timeout=30
         )
         resp.raise_for_status()
         data = resp.json()
-        text = data['candidates'][0]['content']['parts'][0]['text']
+        text = data['choices'][0]['message']['content']
 
-        # Clean JSON từ response
+        # Clean JSON
         text = re.sub(r'```json\s*', '', text)
         text = re.sub(r'```\s*', '', text)
         text = text.strip()
 
         script = json.loads(text)
-        print(f"[Script] ✅ Sinh kịch bản thành công: {script.get('title', '')}")
+        print(f"[Script] ✅ Groq sinh kịch bản: {script.get('title', '')}")
         return script
 
     except Exception as e:
-        print(f"[Script] Gemini lỗi: {e}, dùng fallback")
+        print(f"[Script] Groq lỗi: {e}, dùng fallback")
         return _fallback_script(topic, style)
 
 
 def _fallback_script(topic: str, style: str) -> dict:
-    """Script mẫu khi không có API key"""
     return {
-        "title": f"🔥 {topic[:40]} | Viral 2024",
+        "title": f"🔥 {topic[:40]} | Viral 2025",
         "narration": (
             f"Bạn có biết về {topic} không? "
             f"Đây là một trong những chủ đề đang HOT nhất hiện nay! "
