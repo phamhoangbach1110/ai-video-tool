@@ -97,6 +97,22 @@ def _run_pipeline(job_id, topic, style, duration):
         import traceback; traceback.print_exc()
         _upd(job_id, status='error', message=f'Lỗi: {exc}', error=str(exc))
 
+@app.route('/api/video-prompt', methods=['POST'])
+def video_prompt():
+    data     = request.get_json(force=True) or {}
+    topic    = data.get('topic', '').strip()
+    style    = data.get('style', 'cinematic')
+    duration = data.get('duration', '8s')
+
+    if not topic:
+        return jsonify({'success': False, 'error': 'Thiếu topic'}), 400
+
+    try:
+        result = generate_video_prompt(topic, style, duration)
+        return jsonify({'success': True, **result})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f'🚀 Backend chạy tại http://localhost:{port}')

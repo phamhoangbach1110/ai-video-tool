@@ -122,3 +122,76 @@ def _fallback_script(topic: str, style: str) -> dict:
         "hashtags": [f"#{topic.replace(' ', '')}", "#viral", "#trending", "#viet", "#xuhuong"],
         "description": f"Video về {topic} - Nội dung trending HOT nhất hôm nay! 🔥 #viral #trending"
     }
+
+def generate_video_prompt(topic: str, style: str, duration: str) -> dict:
+    """Sinh prompt chuẩn cho Google Flow / VideoFX"""
+
+    style_map = {
+        'cinematic':  'cinematic shot, 4K, dramatic lighting, film grain, anamorphic lens',
+        'anime':      'anime style, vibrant colors, Studio Ghibli aesthetic, hand-drawn',
+        'cartoon':    'cartoon style, bright colors, clean lines, Pixar inspired',
+        'realistic':  'photorealistic, hyperdetailed, natural lighting, DSLR quality',
+        'lofi':       'lo-fi aesthetic, soft colors, cozy atmosphere, nostalgic, pastel',
+        'epic':       'epic scale, dramatic atmosphere, volumetric lighting, awe-inspiring',
+    }
+    style_desc = style_map.get(style, style_map['cinematic'])
+
+    if not GROQ_API_KEY:
+        return _fallback_prompt(topic, style_desc, duration)
+
+    prompt = f"""Tạo video prompt chuyên nghiệp cho AI video generator (Google Flow) về chủ đề: "{topic}"
+Style: {style_desc}
+Duration: {duration}
+
+Trả về JSON (chỉ JSON thuần, không markdown):
+{{
+  "video_prompt": "Prompt chính bằng tiếng Anh, chi tiết, 50-80 từ, mô tả cảnh quay, ánh sáng, góc máy, chuyển động camera",
+  "scene_prompts": [
+    "Prompt cảnh 1 bằng tiếng Anh (15-25 từ)",
+    "Prompt cảnh 2 bằng tiếng Anh (15-25 từ)",
+    "Prompt cảnh 3 bằng tiếng Anh (15-25 từ)"
+  ],
+  "negative_prompt": "Những thứ KHÔNG muốn xuất hiện trong video, bằng tiếng Anh"
+}}"""
+
+    try:
+        resp = requests.post(
+            GROQ_URL,
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "llama-3.3-70b-versatile",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are an expert AI video prompt engineer. Return only valid JSON, no markdown."
+                    },
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.7,
+                "max_tokens": 800,
+            },
+            timeout=20
+        )
+        resp.raise_for_status()
+        text = resp.json()['choices'][0]['message']['content']
+        text = re.sub(r'```json\s*', '', text)
+        text = re.sub(r'```\s*', '', text).strip()
+        return json.loads(text)
+    except Exception as e:
+        print(f"[VideoPrompt] Groq lỗi: {e}")
+        return _fallback_prompt(topic, style_desc, duration)
+
+
+def _fallback_prompt(topic: str, style_desc: str, duration: str) -> dict:
+    return {
+        "video_prompt": f"A beautiful {duration} video about {topic}, {style_desc}, smooth camera movement, professional quality, ultra detailed",
+        "scene_prompts": [
+            f"Opening wide shot of {topic}, {style_desc}, establishing scene",
+            f"Close-up detail shot of {topic}, {style_desc}, dramatic lighting",
+            f"Cinematic ending shot of {topic}, {style_desc}, fade out",
+        ],
+        "negative_prompt": "blurry, low quality, distorted, ugly, bad anatomy, watermark, text, logo, pixelated, noisy"
+    }

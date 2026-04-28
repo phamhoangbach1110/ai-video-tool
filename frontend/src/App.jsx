@@ -5,10 +5,12 @@ import JobsPage from './pages/JobsPage';
 import SettingsPage from './pages/SettingsPage';
 import Toast from './components/Toast';
 import { useToast } from './hooks/useToast';
+import VideoAIPage from './pages/VideoAIPage';
 
 const TABS = [
   { id: 'trends',   icon: '🔥', label: 'Xu hướng' },
   { id: 'generate', icon: '⚡', label: 'Tạo video' },
+  { id: 'videoai',  icon: '🎥', label: 'Video AI' },
   { id: 'jobs',     icon: '📋', label: 'Lịch sử' },
   { id: 'settings', icon: '⚙️', label: 'Cài đặt' },
 ];
@@ -101,6 +103,9 @@ export default function App() {
         )}
         {activeTab === 'generate' && (
           <GeneratePage selectedTopic={selectedTopic} showToast={showToast} />
+        )}
+        {activeTab === 'videoai' && (
+          <VideoAIPage showToast={showToast} />
         )}
         {activeTab === 'jobs' && (
           <JobsPage showToast={showToast} />
