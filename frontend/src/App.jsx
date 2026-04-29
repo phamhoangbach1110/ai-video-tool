@@ -1,34 +1,39 @@
-import React, { useState } from 'react';
-import TrendsPage from './pages/TrendsPage';
-import GeneratePage from './pages/GeneratePage';
-import JobsPage from './pages/JobsPage';
+import React, { useState, useEffect } from 'react';
+import TrendsPage   from './pages/TrendsPage';
+import PromptPage   from './pages/PromptPage';
+import JobsPage     from './pages/JobsPage';
 import SettingsPage from './pages/SettingsPage';
-import Toast from './components/Toast';
+import Toast        from './components/Toast';
 import { useToast } from './hooks/useToast';
-import VideoAIPage from './pages/VideoAIPage';
 
 const TABS = [
-  { id: 'trends',   icon: '🔥', label: 'Xu hướng' },
-  { id: 'generate', icon: '⚡', label: 'Tạo video' },
-  { id: 'videoai',  icon: '🎥', label: 'Video AI' },
-  { id: 'jobs',     icon: '📋', label: 'Lịch sử' },
-  { id: 'settings', icon: '⚙️', label: 'Cài đặt' },
+  { id: 'trends',   icon: '🔥', label: 'Xu hướng'   },
+  { id: 'prompt',   icon: '✨', label: 'Tạo Prompt'  },
+  { id: 'jobs',     icon: '📋', label: 'Lịch sử'     },
+  { id: 'settings', icon: '⚙️', label: 'Cài đặt'    },
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('trends');
+  const [activeTab, setActiveTab]         = useState('trends');
   const [selectedTopic, setSelectedTopic] = useState('');
-  const { toast, showToast } = useToast();
+  const { toast, showToast }              = useToast();
+
+  useEffect(() => {
+    const API_URL = process.env.REACT_APP_API_URL || '';
+    const ping = () => fetch(`${API_URL}/api/health`).catch(() => {});
+    ping();
+    const interval = setInterval(ping, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSelectTrend = (topic) => {
     setSelectedTopic(topic);
-    setActiveTab('generate');
+    setActiveTab('prompt');
     showToast(`✓ Đã chọn: ${topic.slice(0, 40)}`, 'success');
   };
 
   return (
     <div style={{ minHeight: '100vh', position: 'relative' }}>
-      {/* Ambient bg */}
       <div style={{
         position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
         backgroundImage: 'linear-gradient(rgba(124,58,237,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,0.025) 1px,transparent 1px)',
@@ -46,7 +51,6 @@ export default function App() {
       }} />
 
       <div style={{ maxWidth: 1120, margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
-        {/* Header */}
         <header style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '24px 0 20px', borderBottom: '1px solid #ffffff0d'
@@ -58,10 +62,10 @@ export default function App() {
               borderRadius: 12, display: 'flex', alignItems: 'center',
               justifyContent: 'center', fontSize: 20,
               boxShadow: '0 0 32px #7c3aed40'
-            }}>🎬</div>
+            }}>✨</div>
             <div>
               <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: -0.5 }}>
-                AI <span style={{ color: '#a78bfa' }}>Video</span> Tool
+                AI <span style={{ color: '#a78bfa' }}>Prompt</span> Tool
               </div>
               <div style={{ fontSize: 11, color: '#5e5a80', fontFamily: 'JetBrains Mono,monospace' }}>
                 Vietnamese Content Engine
@@ -76,7 +80,6 @@ export default function App() {
           }}>FREE FOREVER</div>
         </header>
 
-        {/* Tabs */}
         <nav style={{
           display: 'flex', gap: 4, margin: '24px 0 32px',
           background: '#0e0e1c', padding: 4, borderRadius: 14,
@@ -84,7 +87,7 @@ export default function App() {
         }}>
           {TABS.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
-              padding: '9px 20px', borderRadius: 10, fontSize: 14,
+              padding: '9px 20px', borderRadius: 10, fontSize: 13,
               fontWeight: 500, cursor: 'pointer', transition: 'all 0.2s',
               border: 'none', fontFamily: 'Outfit,sans-serif',
               background: activeTab === tab.id
@@ -97,22 +100,10 @@ export default function App() {
           ))}
         </nav>
 
-        {/* Pages */}
-        {activeTab === 'trends' && (
-          <TrendsPage onSelectTrend={handleSelectTrend} showToast={showToast} />
-        )}
-        {activeTab === 'generate' && (
-          <GeneratePage selectedTopic={selectedTopic} showToast={showToast} />
-        )}
-        {activeTab === 'videoai' && (
-          <VideoAIPage showToast={showToast} />
-        )}
-        {activeTab === 'jobs' && (
-          <JobsPage showToast={showToast} />
-        )}
-        {activeTab === 'settings' && (
-          <SettingsPage showToast={showToast} />
-        )}
+        {activeTab === 'trends'   && <TrendsPage   onSelectTrend={handleSelectTrend} showToast={showToast} />}
+        {activeTab === 'prompt'   && <PromptPage   selectedTopic={selectedTopic}     showToast={showToast} />}
+        {activeTab === 'jobs'     && <JobsPage     showToast={showToast} />}
+        {activeTab === 'settings' && <SettingsPage showToast={showToast} />}
       </div>
 
       <Toast toast={toast} />
