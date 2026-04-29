@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import TrendsPage   from './pages/TrendsPage';
 import PromptPage   from './pages/PromptPage';
-import JobsPage     from './pages/JobsPage';
 import SettingsPage from './pages/SettingsPage';
 import Toast        from './components/Toast';
 import { useToast } from './hooks/useToast';
@@ -9,7 +8,6 @@ import { useToast } from './hooks/useToast';
 const TABS = [
   { id: 'trends',   icon: '🔥', label: 'Xu hướng'   },
   { id: 'prompt',   icon: '✨', label: 'Tạo Prompt'  },
-  { id: 'jobs',     icon: '📋', label: 'Lịch sử'     },
   { id: 'settings', icon: '⚙️', label: 'Cài đặt'    },
 ];
 
@@ -102,7 +100,6 @@ export default function App() {
 
         {activeTab === 'trends'   && <TrendsPage   onSelectTrend={handleSelectTrend} showToast={showToast} />}
         {activeTab === 'prompt'   && <PromptPage   selectedTopic={selectedTopic}     showToast={showToast} />}
-        {activeTab === 'jobs'     && <JobsPage     showToast={showToast} />}
         {activeTab === 'settings' && <SettingsPage showToast={showToast} />}
       </div>
 
