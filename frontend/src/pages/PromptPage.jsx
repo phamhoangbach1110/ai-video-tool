@@ -65,7 +65,7 @@ export default function PromptPage({ selectedTopic, showToast }) {
     const toTime = (sec) => {
       const m = Math.floor(sec / 60);
       const s = sec % 60;
-      return `0:${String(m).padStart(2,'0')}${s > 0 ? ':' + String(s).padStart(2,'0') : '00'}`;
+      return `0:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     };
 
     let text = '';
@@ -91,10 +91,7 @@ export default function PromptPage({ selectedTopic, showToast }) {
   };
 
   const copyAndOpen = (text) => {
-    navigator.clipboard.writeText(text).then(() => {
-      showToast('✅ Đã copy! Đang mở Google Flow...', 'success');
-      setTimeout(() => window.open(GOOGLE_FLOW_URL, '_blank'), 600);
-    });
+    window.open(GOOGLE_FLOW_URL, '_blank');
   };
 
   return (
@@ -245,7 +242,7 @@ export default function PromptPage({ selectedTopic, showToast }) {
                     📋 Copy
                   </button>
                   <button onClick={() => copyAndOpen(result.video_prompt)} style={btnGreen}>
-                    🚀 Copy & Mở Google Flow
+                    🚀 Mở Google Flow
                   </button>
                 </div>
               </Card>
@@ -272,7 +269,7 @@ export default function PromptPage({ selectedTopic, showToast }) {
                             📋 Copy
                           </button>
                           <button onClick={() => copyAndOpen(scene)} style={{...btnOutline, borderColor:'#10b98140', color:'#10b981'}}>
-                            🚀 Copy & Mở Flow
+                            🚀 Mở Flow
                           </button>
                         </div>
                       </div>
