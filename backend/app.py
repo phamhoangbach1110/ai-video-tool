@@ -17,7 +17,7 @@ os.makedirs(ASSETS_DIR, exist_ok=True)
 
 sys.path.insert(0, BASE_DIR)
 from trend_analyzer   import get_trending_topics
-from script_generator import generate_script
+from script_generator import generate_script, generate_video_prompt
 from media_generator  import generate_images, generate_audio
 from video_assembler  import assemble_video
 
