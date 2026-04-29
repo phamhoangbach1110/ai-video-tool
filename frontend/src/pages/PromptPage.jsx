@@ -54,6 +54,42 @@ export default function PromptPage({ selectedTopic, showToast }) {
     });
   };
 
+  const copyAll = () => {
+    if (!result) return;
+
+    // Tính thời gian mỗi cảnh
+    const totalSec = parseInt(duration);
+    const sceneCount = result.scene_prompts?.length || 1;
+    const secPerScene = Math.floor(totalSec / sceneCount);
+
+    const toTime = (sec) => {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `0:${String(m).padStart(2,'0')}${s > 0 ? ':' + String(s).padStart(2,'0') : '00'}`;
+    };
+
+    let text = '';
+
+    // Prompt chính
+    text += `VIDEO PROMPT:\n${result.video_prompt}\n\n`;
+
+    // Từng cảnh
+    result.scene_prompts?.forEach((scene, i) => {
+      const start = i * secPerScene;
+      const end   = i === sceneCount - 1 ? totalSec : (i + 1) * secPerScene;
+      text += `Scene ${i + 1} (${toTime(start)} - ${toTime(end)}):\n${scene}\n\n`;
+    });
+
+    // Negative prompt
+    if (result.negative_prompt) {
+      text += `Negative Prompt:\n${result.negative_prompt}`;
+    }
+
+    navigator.clipboard.writeText(text.trim()).then(() => {
+      showToast('✅ Đã copy toàn bộ prompt!', 'success');
+    });
+  };
+
   const copyAndOpen = (text) => {
     navigator.clipboard.writeText(text).then(() => {
       showToast('✅ Đã copy! Đang mở Google Flow...', 'success');
@@ -183,6 +219,19 @@ export default function PromptPage({ selectedTopic, showToast }) {
             <>
               <Card glow>
                 <CardTitle>🎬 Video Prompt chính</CardTitle>
+
+                {/* Nút copy toàn bộ */}
+                <button onClick={copyAll} style={{
+                  width: '100%', padding: '11px', borderRadius: 10, border: 'none',
+                  background: 'linear-gradient(135deg,#f59e0b,#d97706)',
+                  color: '#fff', fontFamily: 'Outfit,sans-serif',
+                  fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                  boxShadow: '0 4px 16px #f59e0b40', marginBottom: 14,
+                  transition: 'all 0.2s',
+                }}>
+                  📄 Copy toàn bộ (Scene 1, 2, 3... + Negative Prompt)
+                </button>
+
                 <div style={{
                   background: '#16162a', borderRadius: 10, padding: 16,
                   border: '1px solid #7c3aed40', marginBottom: 14,
